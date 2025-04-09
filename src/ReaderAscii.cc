@@ -277,6 +277,9 @@ bool ReaderAscii::read_event(GenEvent &evt) {
         return false;
     }
 
+    if(failed()){
+      HEPMC3_ERROR_LEVEL(600,"ReaderAscii: Successfully parsed event but immediately failed, this probably means that you have skipped the last event because the input file doesn't contain a trailing newline.")
+    }
 
     return true;
 }
@@ -446,8 +449,6 @@ bool ReaderAscii::parse_vertex_information(const char *buf) {
         position.setT(std::strtod(cursor, &after_parse));
         cursor = after_parse;
     }
-
-    std::cout << "pos: " << position.x() << ", " << position.y() << ", "<< position.z() << ", "<< position.t() << std::endl;
 
     return true;
 }
