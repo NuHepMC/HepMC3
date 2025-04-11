@@ -278,15 +278,21 @@ bool ReaderAscii::read_event(GenEvent &evt) {
     }
 
     if(failed()){
-      HEPMC3_ERROR_LEVEL(600,"ReaderAscii: Successfully parsed event but immediately failed, this probably means that you have skipped the last event because the input file doesn't contain a trailing newline.")
+      HEPMC3_ERROR_LEVEL(600,"ReaderAscii: Successfully parsed event but immediately failed, "
+        "this probably means that you have skipped the last event because the input file doesn't "
+        "contain a trailing newline.")
     }
 
     return true;
 }
 
-char const * cstr_find_first_not_of(const char *buf, char const * dels){
-  char const * next = buf + strspn(buf, dels);
-  return (*next != '\0') ? next : nullptr;
+namespace {
+char const * __attribute__ ((noinline)) find_next_token(char const *buf){
+  while((*buf) == ' '){
+    buf++;
+  }
+  return ((*buf) == '\0') ? nullptr : buf;
+}
 }
 
 std::pair<int, int> ReaderAscii::parse_event_information(const char *buf) {
@@ -297,17 +303,20 @@ std::pair<int, int> ReaderAscii::parse_event_information(const char *buf) {
     FourVector&                  position = m_data.event_pos;
 
     // event number
-    if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return err;
+    if ( !(cursor = find_next_token(cursor)) ) return err;
     m_data.event_number = std::strtol(cursor, &after_parse, 10);
+    if(cursor == after_parse) return err;
     cursor = after_parse;
     // num_vertices
-    if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return err;
+    if ( !(cursor = find_next_token(cursor)) ) return err;
     ret.first = std::strtol(cursor, &after_parse, 10);
+    if(cursor == after_parse) return err;
     cursor = after_parse;
 
     // num_particles
-    if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return err;
+    if ( !(cursor = find_next_token(cursor)) ) return err;
     ret.second = std::strtol(cursor, &after_parse, 10);
+    if(cursor == after_parse) return err;
     cursor = after_parse;
 
     m_data.vertices = std::vector<GenVertexData>(ret.first);
@@ -322,23 +331,27 @@ std::pair<int, int> ReaderAscii::parse_event_information(const char *buf) {
     // check if there is position information
     if ( (cursor = std::strchr(cursor, '@')) ) {
         // x
-        if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return err;
+        if ( !(cursor = find_next_token(cursor)) ) return err;
         position.setX(std::strtod(cursor, &after_parse));
+        if(cursor == after_parse) return err;
         cursor = after_parse;
 
         // y
-        if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return err;
+        if ( !(cursor = find_next_token(cursor)) ) return err;
         position.setY(std::strtod(cursor, &after_parse));
+        if(cursor == after_parse) return err;
         cursor = after_parse;
 
         // z
-        if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return err;
+        if ( !(cursor = find_next_token(cursor)) ) return err;
         position.setZ(std::strtod(cursor, &after_parse));
+        if(cursor == after_parse) return err;
         cursor = after_parse;
 
         // t
-        if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return err;
+        if ( !(cursor = find_next_token(cursor)) ) return err;
         position.setT(std::strtod(cursor, &after_parse));
+        if(cursor == after_parse) return err;
         cursor = after_parse;
     }
 
@@ -369,12 +382,12 @@ bool ReaderAscii::parse_units(const char *buf) {
     const char *cursor = buf + 1;
 
     // momentum
-    if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return false;
+    if ( !(cursor = find_next_token(cursor)) ) return false;
     m_data.momentum_unit = Units::momentum_unit(cursor);
     cursor = cursor + 3; // Units::momentum_unit assumes this string is 3 chars long, so we can too
 
     // length
-    if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return false;
+    if ( !(cursor = find_next_token(cursor)) ) return false;
     m_data.length_unit = Units::length_unit(cursor);
 
     HEPMC3_DEBUG(10, "ReaderAscii: U: " << Units::name(m_data.momentum_unit) << " " << Units::name(m_data.length_unit))
@@ -391,12 +404,13 @@ bool ReaderAscii::parse_vertex_information(const char *buf) {
     int           id              = 0;
 
     // id
-    if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return false;
+    if ( !(cursor = find_next_token(cursor)) ) return false;
     id = std::strtol(cursor, &after_parse, 10);
+    if(cursor == after_parse) return false;
     cursor = after_parse;
 
     // status
-    if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return false;
+    if ( !(cursor = find_next_token(cursor)) ) return false;
     m_data.vertices[-id-1].status = std::strtol(cursor, &after_parse, 10);
     cursor = after_parse;
     FourVector&  position = m_data.vertices[-id-1].position;
@@ -404,10 +418,11 @@ bool ReaderAscii::parse_vertex_information(const char *buf) {
     // skip to the list of particles
     if ( !(cursor = std::strchr(cursor, '[')) ) return false;
     
-    if ( !(cursor = cstr_find_first_not_of(cursor+1, " ")) ) return false;
+    if ( !(cursor = find_next_token(cursor+1)) ) return false;
 
     while (true) {
         int  particle_in = std::strtol(cursor, &after_parse, 10);
+        if(cursor == after_parse) return false;
         cursor = after_parse;
         cursor2 = cursor;
 
@@ -422,7 +437,7 @@ bool ReaderAscii::parse_vertex_information(const char *buf) {
             if ( !(cursor = std::strchr(cursor2, ']')) ) return false;
             break;
         }
-        if ( !(cursor = cstr_find_first_not_of(cursor+1, " ")) ) return false;
+        if ( !(cursor = find_next_token(cursor+1)) ) return false;
 
     }
 
@@ -430,23 +445,27 @@ bool ReaderAscii::parse_vertex_information(const char *buf) {
     if ( (cursor = std::strchr(cursor, '@')) ) {
 
         // x
-        if ( !(cursor = cstr_find_first_not_of(cursor+1, " ")) ) return false;
+        if ( !(cursor = find_next_token(cursor+1)) ) return false;
         position.setX(std::strtod(cursor, &after_parse));
+        if(cursor == after_parse) return false;
         cursor = after_parse;
 
         // y
-        if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return false;
+        if ( !(cursor = find_next_token(cursor)) ) return false;
         position.setY(std::strtod(cursor, &after_parse));
+        if(cursor == after_parse) return false;
         cursor = after_parse;
 
         // z
-        if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return false;
+        if ( !(cursor = find_next_token(cursor)) ) return false;
         position.setZ(std::strtod(cursor, &after_parse));
+        if(cursor == after_parse) return false;
         cursor = after_parse;
 
         // t
-        if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return false;
+        if ( !(cursor = find_next_token(cursor)) ) return false;
         position.setT(std::strtod(cursor, &after_parse));
+        if(cursor == after_parse) return false;
         cursor = after_parse;
     }
 
@@ -460,9 +479,11 @@ bool ReaderAscii::parse_particle_information(const char *buf) {
     int             mother_id = 0;
 
     // verify id
-    if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return false;
+    if ( !(cursor = find_next_token(cursor)) ) return false;
 
     int id = std::strtol(cursor, &after_parse, 10);
+    if(cursor == after_parse) return false;
+
     cursor = after_parse;
     if ( id < 1 || id > static_cast<int>(m_data.particles.size()) ) {
         HEPMC3_ERROR_LEVEL(600,"ReaderAscii: particle ID is out of expected range.")
@@ -471,8 +492,10 @@ bool ReaderAscii::parse_particle_information(const char *buf) {
 
     FourVector&      momentum = m_data.particles[id-1].momentum;
     // mother id
-    if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return false;
+    if ( !(cursor = find_next_token(cursor)) ) return false;
     mother_id = std::strtol(cursor, &after_parse, 10);
+    if(cursor == after_parse) return false;
+
     cursor = after_parse;
     if ( mother_id < -static_cast<int>(m_data.vertices.size()) || mother_id > static_cast<int>(m_data.particles.size()) ) {
         HEPMC3_ERROR_LEVEL(600,"ReaderAscii: ID of particle mother is out of expected range.")
@@ -490,40 +513,46 @@ bool ReaderAscii::parse_particle_information(const char *buf) {
         m_io_explicit_ids.insert(mother_id);
     }
     // pdg id
-    if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return false;
+    if ( !(cursor = find_next_token(cursor)) ) return false;
     m_data.particles[id-1].pid = std::strtol(cursor, &after_parse, 10);
+    if(cursor == after_parse) return false;
     cursor = after_parse;
 
     // px
-    if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return false;
+    if ( !(cursor = find_next_token(cursor)) ) return false;
     momentum.setPx(std::strtod(cursor, &after_parse));
-        cursor = after_parse;
+    if(cursor == after_parse) return false;
+    cursor = after_parse;
 
     // py
-    if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return false;
+    if ( !(cursor = find_next_token(cursor)) ) return false;
     momentum.setPy(std::strtod(cursor, &after_parse));
-        cursor = after_parse;
+    if(cursor == after_parse) return false;
+    cursor = after_parse;
 
     // pz
-    if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return false;
+    if ( !(cursor = find_next_token(cursor)) ) return false;
     momentum.setPz(std::strtod(cursor, &after_parse));
-        cursor = after_parse;
+    if(cursor == after_parse) return false;
+    cursor = after_parse;
 
     // pe
-    if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return false;
+    if ( !(cursor = find_next_token(cursor)) ) return false;
     momentum.setE(std::strtod(cursor, &after_parse));
-        cursor = after_parse;
+    if(cursor == after_parse) return false;
+    cursor = after_parse;
 
     // m
-    if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return false;
+    if ( !(cursor = find_next_token(cursor)) ) return false;
     m_data.particles[id-1].mass = std::strtod(cursor, &after_parse);
-        cursor = after_parse;
+    if(cursor == after_parse) return false;
+    cursor = after_parse;
     m_data.particles[id-1].is_mass_set = true;
 
     // status
-    if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return false;
+    if ( !(cursor = find_next_token(cursor)) ) return false;
     m_data.particles[id-1].status = std::strtol(cursor, &after_parse, 10);
-    cursor = after_parse;
+    if(cursor == after_parse) return false;
 
     return true;
 }
@@ -536,16 +565,17 @@ bool ReaderAscii::parse_attribute(const char *buf) {
     std::array<char, 512> name{};
     int             id = 0;
 
-    if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return false;
+    if ( !(cursor = find_next_token(cursor)) ) return false;
     id = std::strtol(cursor, &after_parse, 10);
+    if(cursor == after_parse) return false;
     cursor = after_parse;
 
-    if ( !(cursor  = cstr_find_first_not_of(cursor, " ")) ) return false;
+    if ( !(cursor  = find_next_token(cursor)) ) return false;
 
     if ( !(cursor2 = std::strchr(cursor, ' ')) ) return false;
     snprintf(name.data(), name.size(), "%.*s", static_cast<int>(cursor2-cursor), cursor);
 
-    cursor = cstr_find_first_not_of(cursor2, " ");
+    cursor = find_next_token(cursor2);
 
     m_data.attribute_id.push_back(id);
     m_data.attribute_name.emplace_back(name.data());
@@ -560,12 +590,19 @@ bool ReaderAscii::parse_run_attribute(const char *buf) {
     char * after_parse = nullptr;
     std::array<char, 512> name{};
 
-    if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return false;
+    if ( !(cursor = find_next_token(cursor)) ) return false;
 
     if ( !(cursor2 = std::strchr(cursor, ' ')) ) return false;
     snprintf(name.data(), name.size(), "%.*s", static_cast<int>(cursor2-cursor), cursor);
 
-    cursor = cstr_find_first_not_of(cursor2, " ");
+    cursor = find_next_token(cursor2);
+
+    if(!cursor){ //guards against empty attributes
+      run_info()->add_attribute(std::string(name.data()), 
+        std::make_shared<StringAttribute>(StringAttribute("")));
+
+      return true;
+    }
 
     std::shared_ptr<StringAttribute> att =
         std::make_shared<StringAttribute>(StringAttribute(unescape(cursor)));
@@ -579,7 +616,7 @@ bool ReaderAscii::parse_run_attribute(const char *buf) {
 bool ReaderAscii::parse_weight_names(const char *buf) {
     const char     *cursor  = buf + 1;
 
-    if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return false;
+    if ( !(cursor = find_next_token(cursor)) ) return false;
 
     std::istringstream iss(unescape(cursor));
     std::vector<std::string> names;
@@ -594,7 +631,7 @@ bool ReaderAscii::parse_weight_names(const char *buf) {
 bool ReaderAscii::parse_tool(const char *buf) {
     const char     *cursor  = buf + 1;
 
-    if ( !(cursor = cstr_find_first_not_of(cursor, " ")) ) return false;
+    if ( !(cursor = find_next_token(cursor)) ) return false;
 
     std::string line = unescape(cursor);
     GenRunInfo::ToolInfo tool;
