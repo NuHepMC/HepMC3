@@ -287,7 +287,7 @@ bool ReaderAscii::read_event(GenEvent &evt) {
 }
 
 namespace {
-char const * __attribute__ ((noinline)) find_next_token(char const *buf){
+char const * find_next_token(char const *buf){
   while((*buf) == ' '){
     buf++;
   }
