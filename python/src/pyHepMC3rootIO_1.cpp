@@ -26,17 +26,17 @@
 
 #ifndef BINDER_PYBIND11_TYPE_CASTER
 	#define BINDER_PYBIND11_TYPE_CASTER
-	PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
-	PYBIND11_DECLARE_HOLDER_TYPE(T, T*)
+	PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>, false)
+	PYBIND11_DECLARE_HOLDER_TYPE(T, T*, false)
 	PYBIND11_MAKE_OPAQUE(std::shared_ptr<void>)
 #endif
 
 void bind_pyHepMC3rootIO_1(std::function< pybind11::module &(std::string const &namespace_) > &M)
 {
-	// HepMC3::ReaderRootTree file:HepMC3/ReaderRootTree.h line:35
-	 binder::ReaderRootTree_binder(M("HepMC3"));
+	// HepMC3::ReaderRootTree file:HepMC3/ReaderRootTree.h line:
+	binder::ReaderRootTree_binder(M("HepMC3"));
 
-	// HepMC3::WriterRoot file:HepMC3/WriterRoot.h line:37
-	 binder::WriterRoot_binder(M("HepMC3"));
+	// HepMC3::WriterRoot file:HepMC3/WriterRoot.h line:
+	binder::WriterRoot_binder(M("HepMC3"));
 
 }

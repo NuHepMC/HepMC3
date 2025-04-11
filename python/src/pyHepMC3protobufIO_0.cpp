@@ -28,17 +28,17 @@
 
 #ifndef BINDER_PYBIND11_TYPE_CASTER
 	#define BINDER_PYBIND11_TYPE_CASTER
-	PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
-	PYBIND11_DECLARE_HOLDER_TYPE(T, T*)
+	PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>, false)
+	PYBIND11_DECLARE_HOLDER_TYPE(T, T*, false)
 	PYBIND11_MAKE_OPAQUE(std::shared_ptr<void>)
 #endif
 
 void bind_pyHepMC3protobufIO_0(std::function< pybind11::module &(std::string const &namespace_) > &M)
 {
-	// HepMC3::Readerprotobuf file:HepMC3/Readerprotobuf.h line:37
-	 binder::Readerprotobuf_binder(M("HepMC3"));
+	// HepMC3::Readerprotobuf file:HepMC3/Readerprotobuf.h line:
+	binder::Readerprotobuf_binder(M("HepMC3"));
 
-	// HepMC3::Writerprotobuf file:HepMC3/Writerprotobuf.h line:32
-	 binder::Writerprotobuf_binder(M("HepMC3"));
+	// HepMC3::Writerprotobuf file:HepMC3/Writerprotobuf.h line:
+	binder::Writerprotobuf_binder(M("HepMC3"));
 
 }

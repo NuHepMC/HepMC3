@@ -86,11 +86,6 @@ void ReaderLHEF::init()
     run_info()->add_attribute("EBMUP1",std::make_shared<DoubleAttribute>(m_hepr->heprup.EBMUP.first));
     run_info()->add_attribute("EBMUP2",std::make_shared<DoubleAttribute>(m_hepr->heprup.EBMUP.second));
 
-
-
-
-
-
     // We want to be able to convey the different event weights to
     // HepMC. In particular we need to add the names of the weights to
     // the GenRunInfo object.
@@ -100,18 +95,18 @@ void ReaderLHEF::init()
     weightnames.reserve(N);
     for ( size_t i = 0; i < N; ++i ) weightnames.emplace_back(m_hepr->heprup.weightNameHepMC(i));
     if (nweights == 0) {
-        HEPMC3_WARNING("ReaderLHEF::init: no weights in the LHEF file.")
+        HEPMC3_WARNING_LEVEL(600,"ReaderLHEF::init: no weights in the LHEF file.")
         nweights=1;
     }
     if (weightnames.empty()) {
-        HEPMC3_WARNING("ReaderLHEF::init: empty weightinfo in the LHEF file.")
+        HEPMC3_WARNING_LEVEL(600,"ReaderLHEF::init: empty weightinfo in the LHEF file.")
         for ( size_t i = weightnames.size(); i < nweights; ++i ) weightnames.emplace_back(std::to_string(i));
     }
     run_info()->set_weight_names(weightnames);
 
     // We also want to convey the information about which generators was
     // used.
-    for ( int i = 0, N = m_hepr->heprup.generators.size(); i < N; ++i )
+    for ( int i = 0, NN = m_hepr->heprup.generators.size(); i < NN; ++i )
     {
         GenRunInfo::ToolInfo tool;
         tool.name =  m_hepr->heprup.generators[i].name;
@@ -175,7 +170,7 @@ bool ReaderLHEF::read_event(GenEvent& ev)
             std::pair<int, int> vertex_index = v.first;
             GenVertexPtr          vertex = v.second;
             for (int i = vertex_index.first-1; i < vertex_index.second; ++i) {
-                if ( i >= 0 && i < (int)particles.size()) {
+                if ( i >= 0 && i < static_cast<int>(particles.size())) {
                     vertex->add_particle_in(particles[i]);
                 }
             }
@@ -189,7 +184,7 @@ bool ReaderLHEF::read_event(GenEvent& ev)
                 else { vertices[vertex_index]->add_particle_out(particles[i]);}
             }
         }
-        for ( auto v: vertices ) {
+        for ( auto& v: vertices ) {
             if (!v.second->particles_out().empty() && !v.second->particles_in().empty()) {
                 evt.add_vertex(v.second);
             }

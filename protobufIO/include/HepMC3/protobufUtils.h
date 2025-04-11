@@ -1,8 +1,13 @@
+/**
+ *  @file protobufUtils.h
+ *  @brief Definition of utility functions for protobufIO
+ *
+ */
 #include "HepMC3/GenEvent.h"
 #include "HepMC3/GenRunInfo.h"
 
 // protobuf header files
-#include "HepMC3.pb.h"
+#include "HepMC3/HepMC3.pb.h"
 
 #include <memory>
 #include <string>

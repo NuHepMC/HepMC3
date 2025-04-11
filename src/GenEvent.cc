@@ -101,7 +101,7 @@ void GenEvent::add_vertex(GenVertexPtr v) {
     m_vertices.emplace_back(v);
 
     v->m_event = this;
-    v->m_id = -(int)vertices().size();
+    v->m_id = -static_cast<int>(vertices().size());
 
     // Add all incoming and outgoing particles and restore their production/end vertices
     for (const auto& p: v->particles_in()) {
@@ -249,8 +249,9 @@ void GenEvent::remove_vertex(GenVertexPtr v) {
     v->m_event = nullptr;
     v->m_id    = 0;
 }
-/// @todo This looks dangerously similar to the recusive event traversel that we forbade in the
-///       Core library due to wories about generator dependence
+/* This looks dangerously similar to the recusive event traversel that we forbade in the
+       Core library due to wories about generator dependence
+*/
 static bool visit_children(std::map<ConstGenVertexPtr, int>  &a, const ConstGenVertexPtr& v)
 {
     for (const ConstGenParticlePtr& p: v->particles_out()) {
@@ -355,7 +356,7 @@ void GenEvent::add_tree(const std::vector<GenParticlePtr> &parts) {
     if ( m_rootvertex->id() != 0 ) {
         const int vx = -1 - m_rootvertex->id();
         const int rootid = m_rootvertex->id();
-        if ( vx >= 0 && vx < (int) m_vertices.size() && m_vertices[vx] == m_rootvertex ) {
+        if ( vx >= 0 && vx < static_cast<int>(m_vertices.size()) && m_vertices[vx] == m_rootvertex ) {
             auto next = m_vertices.erase(m_vertices.begin() + vx);
             std::lock_guard<std::recursive_mutex> lock(m_lock_attributes);
             for (auto & vt1: m_attributes) {
@@ -375,7 +376,7 @@ void GenEvent::add_tree(const std::vector<GenParticlePtr> &parts) {
                 ++((*next++)->m_id);
             }
         } else {
-            HEPMC3_WARNING("GenEvent::add_tree Suspicious looking rootvertex found. Will try to cope.")
+            HEPMC3_WARNING_LEVEL(700,"GenEvent::add_tree Suspicious looking rootvertex found. Will try to cope.")
         }
     }
 
@@ -421,7 +422,7 @@ const FourVector& GenEvent::event_pos() const {
 std::vector<ConstGenParticlePtr> GenEvent::beams(const int status) const {
     if (!status) return std::const_pointer_cast<const GenVertex>(m_rootvertex)->particles_out();
     std::vector<ConstGenParticlePtr> ret;
-    for (auto p: m_rootvertex->particles_out()) if (p->status() == status) ret.emplace_back(p);
+    for (auto& p: m_rootvertex->particles_out()) if (p->status() == status) ret.emplace_back(p);
     return ret;
 }
 
@@ -483,7 +484,7 @@ bool GenEvent::rotate(const FourVector&  delta)
     {
         const FourVector& pos = v->position();
         if (pos.is_zero()) continue;
-        
+
         long double tempX = pos.x();
         long double tempY = pos.y();
         long double tempZ = pos.z();
@@ -515,7 +516,7 @@ bool GenEvent::reflect(const int axis)
 {
     if ( axis > 3 || axis < 0 )
     {
-        HEPMC3_WARNING("GenEvent::reflect: wrong axis")
+        HEPMC3_WARNING_LEVEL(400,"GenEvent::reflect: wrong axis")
         return false;
     }
     switch (axis)
@@ -548,17 +549,17 @@ bool GenEvent::boost(const FourVector&  delta)
     double deltalength2 = delta.length2();
     if (deltalength2 > 1.0)
     {
-        HEPMC3_WARNING("GenEvent::boost: wrong large boost vector. Will leave event as is.")
+        HEPMC3_WARNING_LEVEL(400,"GenEvent::boost: wrong large boost vector. Will leave event as is.")
         return false;
     }
     if (std::abs(deltalength2-1.0) < std::numeric_limits<double>::epsilon())
     {
-        HEPMC3_WARNING("GenEvent::boost: too large gamma. Will leave event as is.")
+        HEPMC3_WARNING_LEVEL(400,"GenEvent::boost: too large gamma. Will leave event as is.")
         return false;
     }
     if (std::abs(deltalength2) < std::numeric_limits<double>::epsilon())
     {
-        HEPMC3_WARNING("GenEvent::boost: wrong small boost vector. Will leave event as is.")
+        HEPMC3_WARNING_LEVEL(400,"GenEvent::boost: wrong small boost vector. Will leave event as is.")
         return true;
     }
     long double deltaX = delta.x();
@@ -666,7 +667,7 @@ void GenEvent::write_data(GenEventData& data) const {
             bool status = vt2.second->to_string(st);
 
             if ( !status ) {
-                HEPMC3_WARNING("GenEvent::write_data: problem serializing attribute: " << vt1.first)
+                HEPMC3_WARNING_LEVEL(300,"GenEvent::write_data: problem serializing attribute: " << vt1.first)
             }
             else {
                 data.attribute_id.emplace_back(vt2.first);
@@ -702,7 +703,7 @@ void GenEvent::read_data(const GenEventData &data) {
     for ( const GenVertexData &vd: data.vertices ) {
         m_vertices.emplace_back(std::make_shared<GenVertex>(vd));
         m_vertices.back()->m_event = this;
-        m_vertices.back()->m_id    = -(int)m_vertices.size();
+        m_vertices.back()->m_id    = -static_cast<int> (m_vertices.size());
     }
 
     // Restore links
@@ -714,7 +715,10 @@ void GenEvent::read_data(const GenEventData &data) {
         (+-)  --  particle has end vertex
         (-+)  --  particle  has production vertex
         */
-        if ((id1 < 0 && id2 <0) || (id1 > 0 && id2 > 0))   { HEPMC3_WARNING("GenEvent::read_data: wrong link: " << id1 << " " << id2); continue;}
+        if ((id1 < 0 && id2 <0) || (id1 > 0 && id2 > 0))   {
+            HEPMC3_WARNING_LEVEL(600,"GenEvent::read_data: wrong link: " << id1 << " " << id2);
+            continue;
+        }
 
         if ( id1 > 0 ) { m_vertices[ (-id2)-1 ]->add_particle_in ( m_particles[ id1-1 ] ); continue; }
         if ( id1 < 0 ) { m_vertices[ (-id1)-1 ]->add_particle_out( m_particles[ id2-1 ] );   continue; }
@@ -731,10 +735,10 @@ void GenEvent::read_data(const GenEventData &data) {
         if (m_attributes.count(name) == 0) m_attributes[name] = std::map<int, std::shared_ptr<Attribute> >();
         auto att = std::make_shared<StringAttribute>(data.attribute_string[i]);
         att->m_event = this;
-        if ( id > 0 && id <= int(m_particles.size()) ) {
+        if ( id > 0 && id <= static_cast<int>(m_particles.size()) ) {
             att->m_particle = m_particles[id - 1];
         }
-        if ( id < 0 && -id <= int(m_vertices.size()) ) {
+        if ( id < 0 && -id <= static_cast<int>(m_vertices.size()) ) {
             att->m_vertex = m_vertices[-id - 1];
         }
         m_attributes[name][id] = att;
@@ -754,12 +758,12 @@ void GenEvent::set_beam_particles(GenParticlePtr p1, GenParticlePtr p2) {
 void GenEvent::add_beam_particle(GenParticlePtr p1) {
     if (!p1)
     {
-        HEPMC3_WARNING("Attempting to add an empty particle as beam particle. Ignored.")
+        HEPMC3_WARNING_LEVEL(700,"Attempting to add an empty particle as beam particle. Ignored.")
         return;
     }
     if (p1->in_event() && p1->parent_event() != this)
     {
-        HEPMC3_WARNING("Attempting to add particle from another event. Ignored.")
+        HEPMC3_WARNING_LEVEL(700,"Attempting to add particle from another event. Ignored.")
         return;
     }
     if (p1->production_vertex())  p1->production_vertex()->remove_particle_out(p1);
@@ -798,10 +802,10 @@ void GenEvent::add_attribute(const std::string &name, const std::shared_ptr<Attr
     if (m_attributes.count(name) == 0) m_attributes[name] = std::map<int, std::shared_ptr<Attribute> >();
     m_attributes[name][id] = att;
     att->m_event = this;
-    if ( id > 0 && id <= int(particles().size()) ) {
+    if ( id > 0 && id <= static_cast<int>(particles().size()) ) {
         att->m_particle = particles()[id - 1];
     }
-    if ( id < 0 && -id <= int(vertices().size()) ) {
+    if ( id < 0 && -id <= static_cast<int>(vertices().size()) ) {
         att->m_vertex = vertices()[-id - 1];
     }
 }
@@ -821,8 +825,8 @@ void GenEvent::add_attributes(const std::vector<std::string> &names, const std::
     for (const auto& name: unames) {
         if (m_attributes.count(name) == 0) m_attributes[name] = std::map<int, std::shared_ptr<Attribute> >();
     }
-    const int particles_size = int(m_particles.size());
-    const int vertices_size = int(m_vertices.size());
+    const int particles_size = static_cast<int>(m_particles.size());
+    const int vertices_size = static_cast<int>(m_vertices.size());
     for (size_t i = 0; i < N; i++) {
         ///Disallow empty strings
         if (names.at(i).length() == 0) continue;
@@ -848,8 +852,8 @@ void GenEvent::add_attributes(const std::string& name, const std::vector<std::sh
     std::lock_guard<std::recursive_mutex> lock(m_lock_attributes);
     if (m_attributes.count(name) == 0) m_attributes[name] = std::map<int, std::shared_ptr<Attribute> >();
     auto& tmap = m_attributes[name];
-    const int particles_size = int(m_particles.size());
-    const int vertices_size = int(m_vertices.size());
+    const int particles_size = static_cast<int>(m_particles.size());
+    const int vertices_size = static_cast<int>(m_vertices.size());
     for (size_t i = 0; i < N; i++) {
         ///Disallow empty strings
         if (!atts[i])  continue;
@@ -870,8 +874,8 @@ void GenEvent::add_attributes(const std::string& name, const std::vector<std::pa
     std::lock_guard<std::recursive_mutex> lock(m_lock_attributes);
     if (m_attributes.count(name) == 0) m_attributes[name] = std::map<int, std::shared_ptr<Attribute> >();
     auto& tmap = m_attributes[name];
-    const int particles_size = int(m_particles.size());
-    const int vertices_size = int(m_vertices.size());
+    const int particles_size = static_cast<int>(m_particles.size());
+    const int vertices_size = static_cast<int>(m_vertices.size());
     for (const auto& att: atts) {
         ///Disallow empty strings
         if (!att.second)  continue;

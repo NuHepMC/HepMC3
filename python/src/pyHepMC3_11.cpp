@@ -35,12 +35,12 @@
 
 #ifndef BINDER_PYBIND11_TYPE_CASTER
 	#define BINDER_PYBIND11_TYPE_CASTER
-	PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
-	PYBIND11_DECLARE_HOLDER_TYPE(T, T*)
+	PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>, false)
+	PYBIND11_DECLARE_HOLDER_TYPE(T, T*, false)
 	PYBIND11_MAKE_OPAQUE(std::shared_ptr<void>)
 #endif
 
-// HepMC3::WriterAscii file:HepMC3/WriterAscii.h line:25
+// HepMC3::WriterAscii file:HepMC3/WriterAscii.h line:
 struct PyCallBack_HepMC3_WriterAscii : public HepMC3::WriterAscii {
 	using HepMC3::WriterAscii::WriterAscii;
 
@@ -53,7 +53,7 @@ struct PyCallBack_HepMC3_WriterAscii : public HepMC3::WriterAscii {
 				static pybind11::detail::override_caster_t<void> caster;
 				return pybind11::detail::cast_ref<void>(std::move(o), caster);
 			}
-			else return pybind11::detail::cast_safe<void>(std::move(o));
+			return pybind11::detail::cast_safe<void>(std::move(o));
 		}
 		return WriterAscii::write_event(a0);
 	}
@@ -66,7 +66,7 @@ struct PyCallBack_HepMC3_WriterAscii : public HepMC3::WriterAscii {
 				static pybind11::detail::override_caster_t<bool> caster;
 				return pybind11::detail::cast_ref<bool>(std::move(o), caster);
 			}
-			else return pybind11::detail::cast_safe<bool>(std::move(o));
+			return pybind11::detail::cast_safe<bool>(std::move(o));
 		}
 		return WriterAscii::failed();
 	}
@@ -79,7 +79,7 @@ struct PyCallBack_HepMC3_WriterAscii : public HepMC3::WriterAscii {
 				static pybind11::detail::override_caster_t<void> caster;
 				return pybind11::detail::cast_ref<void>(std::move(o), caster);
 			}
-			else return pybind11::detail::cast_safe<void>(std::move(o));
+			return pybind11::detail::cast_safe<void>(std::move(o));
 		}
 		return WriterAscii::close();
 	}
@@ -92,7 +92,7 @@ struct PyCallBack_HepMC3_WriterAscii : public HepMC3::WriterAscii {
 				static pybind11::detail::override_caster_t<void> caster;
 				return pybind11::detail::cast_ref<void>(std::move(o), caster);
 			}
-			else return pybind11::detail::cast_safe<void>(std::move(o));
+			return pybind11::detail::cast_safe<void>(std::move(o));
 		}
 		return Writer::set_run_info(a0);
 	}
@@ -105,7 +105,7 @@ struct PyCallBack_HepMC3_WriterAscii : public HepMC3::WriterAscii {
 				static pybind11::detail::override_caster_t<class std::shared_ptr<class HepMC3::GenRunInfo>> caster;
 				return pybind11::detail::cast_ref<class std::shared_ptr<class HepMC3::GenRunInfo>>(std::move(o), caster);
 			}
-			else return pybind11::detail::cast_safe<class std::shared_ptr<class HepMC3::GenRunInfo>>(std::move(o));
+			return pybind11::detail::cast_safe<class std::shared_ptr<class HepMC3::GenRunInfo>>(std::move(o));
 		}
 		return Writer::run_info();
 	}
@@ -118,11 +118,11 @@ struct PyCallBack_HepMC3_WriterAscii : public HepMC3::WriterAscii {
 				static pybind11::detail::override_caster_t<void> caster;
 				return pybind11::detail::cast_ref<void>(std::move(o), caster);
 			}
-			else return pybind11::detail::cast_safe<void>(std::move(o));
+			return pybind11::detail::cast_safe<void>(std::move(o));
 		}
 		return Writer::set_options(a0);
 	}
-	using _binder_ret_0 = class std::map<std::string, std::string >;
+	using _binder_ret_0 = std::map<std::string, std::string >;
 	_binder_ret_0 get_options() const override {
 		pybind11::gil_scoped_acquire gil;
 		pybind11::function overload = pybind11::get_overload(static_cast<const HepMC3::WriterAscii *>(this), "get_options");
@@ -132,7 +132,7 @@ struct PyCallBack_HepMC3_WriterAscii : public HepMC3::WriterAscii {
 				static pybind11::detail::override_caster_t<_binder_ret_0> caster;
 				return pybind11::detail::cast_ref<_binder_ret_0>(std::move(o), caster);
 			}
-			else return pybind11::detail::cast_safe<_binder_ret_0>(std::move(o));
+			return pybind11::detail::cast_safe<_binder_ret_0>(std::move(o));
 		}
 		return Writer::get_options();
 	}
@@ -140,7 +140,7 @@ struct PyCallBack_HepMC3_WriterAscii : public HepMC3::WriterAscii {
 
 void bind_pyHepMC3_11(std::function< pybind11::module &(std::string const &namespace_) > &M)
 {
-	{ // HepMC3::WriterAscii file:HepMC3/WriterAscii.h line:25
+	{ // HepMC3::WriterAscii file:HepMC3/WriterAscii.h line:
 		pybind11::class_<HepMC3::WriterAscii, std::shared_ptr<HepMC3::WriterAscii>, PyCallBack_HepMC3_WriterAscii, HepMC3::Writer> cl(M("HepMC3"), "WriterAscii", "");
 		cl.def( pybind11::init( [](const std::string & a0){ return new HepMC3::WriterAscii(a0); }, [](const std::string & a0){ return new PyCallBack_HepMC3_WriterAscii(a0); } ), "doc");
 		cl.def( pybind11::init<const std::string &, class std::shared_ptr<class HepMC3::GenRunInfo>>(), pybind11::arg("filename"), pybind11::arg("run") );

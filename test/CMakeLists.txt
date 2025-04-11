@@ -18,13 +18,42 @@ macro( hepmc_test testname )
   set(srcdir ${CMAKE_CURRENT_SOURCE_DIR} )
   set(builddir ${CMAKE_CURRENT_BINARY_DIR} )
   add_test( ${testname} ${CMAKE_CURRENT_BINARY_DIR}/${testname} )
-  SET_TESTS_PROPERTIES( ${testname} PROPERTIES ENVIRONMENT "PATH=${PROJECT_BINARY_DIR}/outputs/${CMAKE_INSTALL_LIBDIR}/;$ENV{PATH}")
+  SET_TESTS_PROPERTIES( ${testname} PROPERTIES ENVIRONMENT "PATH=${PROJECT_BINARY_DIR}/outputs/${CMAKE_INSTALL_LIBDIR}/;$ENV{PATH}"
+  ENVIRONMENT "LD_LIBRARY_PATH=${PROJECT_BINARY_DIR}/outputs/${CMAKE_INSTALL_LIBDIR}/;$ENV{LD_LIBRARY_PATH}"
+  ENVIRONMENT "DYLD_LIBRARY_PATH=${PROJECT_BINARY_DIR}/outputs/${CMAKE_INSTALL_LIBDIR}/;$ENV{DYLD_LIBRARY_PATH}"
+  )
   file(GLOB INPUT${testname}  "${CMAKE_CURRENT_SOURCE_DIR}/input${testname}*" )
   file(COPY ${INPUT${testname}} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
   string(REPLACE "test" "" ${testname} name)
   file(GLOB INPUT${name}  "${CMAKE_CURRENT_SOURCE_DIR}/input${name}*" )
   file(COPY ${INPUT${name}} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 endmacro( hepmc_test )
+
+macro( hepmc_unix_test testname )
+  message( STATUS "HepMC3 test: building UNIX test ${testname} " )
+  find_file( ${testname}_source ${testname}.cc ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} )
+  ADD_EXECUTABLE(${testname} ${${testname}_source}  ${ARGN} )
+  target_include_directories(${testname} BEFORE
+  PUBLIC  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src )
+  target_link_libraries(${testname} PRIVATE HepMC3::HepMC3 )
+  set(srcdir ${CMAKE_CURRENT_SOURCE_DIR} )
+  set(builddir ${CMAKE_CURRENT_BINARY_DIR} )
+
+  string(REPLACE "test" "" ${testname} name)
+  file(GLOB INPUT${testname}  "${CMAKE_CURRENT_SOURCE_DIR}/input${testname}*" )
+  file(COPY ${INPUT${testname}} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+  file(GLOB INPUT${name}  "${CMAKE_CURRENT_SOURCE_DIR}/input${name}*" )
+  file(COPY ${INPUT${name}} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+  file(GLOB RUN${testname}  "${CMAKE_CURRENT_SOURCE_DIR}/run${testname}*" )
+  file(COPY ${RUN${testname}} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+  add_test( NAME ${testname} COMMAND sh ${CMAKE_CURRENT_BINARY_DIR}/run${testname}.sh WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  SET_TESTS_PROPERTIES( ${testname} PROPERTIES ENVIRONMENT "PATH=${PROJECT_BINARY_DIR}/outputs/${CMAKE_INSTALL_BINDIR}/;$ENV{PATH}"
+  ENVIRONMENT "LD_LIBRARY_PATH=${PROJECT_BINARY_DIR}/outputs/${CMAKE_INSTALL_LIBDIR}/;$ENV{LD_LIBRARY_PATH}"
+  ENVIRONMENT "DYLD_LIBRARY_PATH=${PROJECT_BINARY_DIR}/outputs/${CMAKE_INSTALL_LIBDIR}/;$ENV{DYLD_LIBRARY_PATH}"
+  )
+endmacro( hepmc_unix_test )
+
 
 macro( hepmc_root_test testname )
   message( STATUS "HepMC3 test: building ROOT test ${testname} " )
@@ -113,6 +142,7 @@ set( HepMC_tests
         testBoost
         testFourVector
         testMass
+        testPrint
         testPrintBug
         testPolarization
         testUnits
@@ -127,6 +157,9 @@ set( HepMC_tests
         testIO7
         testIO8
         testIO11
+        testIO12
+        testIO13
+        testIO30
         testReaderFactory1
         testSingleVertexHepMC2
         testAttributes
@@ -134,6 +167,10 @@ set( HepMC_tests
         testOrder
         testVertexAttributes
          )
+                 
+set( HepMC_unix_tests
+        testReaderFactory5
+)
 set( HepMC_root_tests
         testIO2
         testIO4
@@ -180,7 +217,7 @@ else()
 endif()
 
 set(compress_tests testIO9)
-if(HEPMC3_ENABLE_PROTOBUFIO)
+if(HEPMC3_ENABLE_PROTOBUFIO AND NOT WIN32)
   LIST(APPEND compress_tests testReaderFactory4)
 endif()
 
@@ -206,9 +243,9 @@ if ("bzip2" IN_LIST HEPMC3_TEST_PACKAGES_LIST)
   endif()
 endif()
 if ("zstd" IN_LIST HEPMC3_TEST_PACKAGES_LIST)
-  #find_package(ZSTD)#FIXME!
-  if(ZSTD_FOUND)
-    message(STATUS "HepMC3 test: Zstd library found.  Zstd tests enabled")
+  find_package(zstd 1.4.0)
+  if(zstd_FOUND)
+    message(STATUS "HepMC3 test: Zstd library version ${zstd_VERSION} found.  Zstd tests enabled")
     list( APPEND HepMC_tests ${compress_tests} )
   endif()
 endif()
@@ -266,13 +303,13 @@ if (WIN32)
        file(COPY ${libbz2dll} DESTINATION ${PROJECT_BINARY_DIR}/outputs/${CMAKE_INSTALL_LIBDIR}/)
      endif()
    endif()
-   #if ("zstd" IN_LIST HEPMC3_TEST_PACKAGES_LIST AND ZSTD_FOUND)
-     #get_filename_component(b ${ZSTD_LIBRARIES} DIRECTORY)
-     #find_file(zstddll NAME libzstd.dll PATHS ${b} ${b}/../bin/)
-     #if (zstddll)
-       #file(COPY ${zstddll} DESTINATION ${PROJECT_BINARY_DIR}/outputs/${CMAKE_INSTALL_LIBDIR}/)
-     #endif()
-   #endif()
+   if ("zstd" IN_LIST HEPMC3_TEST_PACKAGES_LIST AND zstd_FOUND)
+     get_filename_component(b ${zstd_LIBRARY} DIRECTORY)
+     find_file(zstddll NAME libzstd.dll PATHS ${b} ${b}/../bin/)
+     if (zstddll)
+       file(COPY ${zstddll} DESTINATION ${PROJECT_BINARY_DIR}/outputs/${CMAKE_INSTALL_LIBDIR}/)
+     endif()
+   endif()
 endif()
 
 foreach ( ctest ${compress_tests} )
@@ -291,12 +328,11 @@ foreach ( ctest ${compress_tests} )
     target_compile_options(${ctest} PUBLIC "-DHEPMC3_BZ2_SUPPORT=1")
     target_link_libraries(${ctest} PRIVATE BZip2::BZip2 )
   endif()
-  #if ("zstd" IN_LIST HEPMC3_TEST_PACKAGES_LIST AND ZSTD_FOUND)
-    #target_compile_options(${ctest} PUBLIC "-DHEPMC3_USE_COMPRESSION")
-    #target_compile_options(${ctest} PUBLIC "-DHEPMC3_ZSTD_SUPPORT=1")
-    #target_link_libraries(${ctest} PRIVATE "${ZSTD_LIBRARIES}" )
-    #target_include_directories(${ctest} PRIVATE "${ZSTD_INCLUDE_DIRS}" )
-  #endif()
+  if ("zstd" IN_LIST HEPMC3_TEST_PACKAGES_LIST AND zstd_FOUND)
+    target_compile_options(${ctest} PUBLIC "-DHEPMC3_USE_COMPRESSION")
+    target_compile_options(${ctest} PUBLIC "-DHEPMC3_ZSTD_SUPPORT=1")
+    target_link_libraries(${ctest} PRIVATE zstd::libzstd_shared )
+  endif()
 endforeach ( ctest ${compress_tests} )
 
 if(HEPMC3_ENABLE_PROTOBUFIO AND "testReaderFactory4" IN_LIST compress_tests)
@@ -311,6 +347,11 @@ if(HEPMC3_ENABLE_ROOTIO AND (NOT WIN32) )
   target_link_libraries(testIO4 PRIVATE ROOT::Hist)
 endif()
 
+if(NOT WIN32)
+  foreach ( test ${HepMC_unix_tests} )
+    hepmc_unix_test( ${test} )
+  endforeach ( test ${HepMC_unix_tests} )
+endif()
 
 set( convert_tests )
 

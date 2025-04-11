@@ -27,12 +27,12 @@
 
 #ifndef BINDER_PYBIND11_TYPE_CASTER
 	#define BINDER_PYBIND11_TYPE_CASTER
-	PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
-	PYBIND11_DECLARE_HOLDER_TYPE(T, T*)
+	PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>, false)
+	PYBIND11_DECLARE_HOLDER_TYPE(T, T*, false)
 	PYBIND11_MAKE_OPAQUE(std::shared_ptr<void>)
 #endif
 
-// HepMC3::HEPRUPAttribute file:HepMC3/LHEFAttributes.h line:26
+// HepMC3::HEPRUPAttribute file:HepMC3/LHEFAttributes.h line:
 struct PyCallBack_HepMC3_HEPRUPAttribute : public HepMC3::HEPRUPAttribute {
 	using HepMC3::HEPRUPAttribute::HEPRUPAttribute;
 
@@ -45,7 +45,7 @@ struct PyCallBack_HepMC3_HEPRUPAttribute : public HepMC3::HEPRUPAttribute {
 				static pybind11::detail::override_caster_t<bool> caster;
 				return pybind11::detail::cast_ref<bool>(std::move(o), caster);
 			}
-			else return pybind11::detail::cast_safe<bool>(std::move(o));
+			return pybind11::detail::cast_safe<bool>(std::move(o));
 		}
 		return HEPRUPAttribute::from_string(a0);
 	}
@@ -58,7 +58,7 @@ struct PyCallBack_HepMC3_HEPRUPAttribute : public HepMC3::HEPRUPAttribute {
 				static pybind11::detail::override_caster_t<bool> caster;
 				return pybind11::detail::cast_ref<bool>(std::move(o), caster);
 			}
-			else return pybind11::detail::cast_safe<bool>(std::move(o));
+			return pybind11::detail::cast_safe<bool>(std::move(o));
 		}
 		return HEPRUPAttribute::to_string(a0);
 	}
@@ -71,7 +71,7 @@ struct PyCallBack_HepMC3_HEPRUPAttribute : public HepMC3::HEPRUPAttribute {
 				static pybind11::detail::override_caster_t<bool> caster;
 				return pybind11::detail::cast_ref<bool>(std::move(o), caster);
 			}
-			else return pybind11::detail::cast_safe<bool>(std::move(o));
+			return pybind11::detail::cast_safe<bool>(std::move(o));
 		}
 		return Attribute::init();
 	}
@@ -84,13 +84,13 @@ struct PyCallBack_HepMC3_HEPRUPAttribute : public HepMC3::HEPRUPAttribute {
 				static pybind11::detail::override_caster_t<bool> caster;
 				return pybind11::detail::cast_ref<bool>(std::move(o), caster);
 			}
-			else return pybind11::detail::cast_safe<bool>(std::move(o));
+			return pybind11::detail::cast_safe<bool>(std::move(o));
 		}
 		return Attribute::init(a0);
 	}
 };
 
-// HepMC3::HEPEUPAttribute file:HepMC3/LHEFAttributes.h line:68
+// HepMC3::HEPEUPAttribute file:HepMC3/LHEFAttributes.h line:
 struct PyCallBack_HepMC3_HEPEUPAttribute : public HepMC3::HEPEUPAttribute {
 	using HepMC3::HEPEUPAttribute::HEPEUPAttribute;
 
@@ -103,7 +103,7 @@ struct PyCallBack_HepMC3_HEPEUPAttribute : public HepMC3::HEPEUPAttribute {
 				static pybind11::detail::override_caster_t<bool> caster;
 				return pybind11::detail::cast_ref<bool>(std::move(o), caster);
 			}
-			else return pybind11::detail::cast_safe<bool>(std::move(o));
+			return pybind11::detail::cast_safe<bool>(std::move(o));
 		}
 		return HEPEUPAttribute::from_string(a0);
 	}
@@ -116,7 +116,7 @@ struct PyCallBack_HepMC3_HEPEUPAttribute : public HepMC3::HEPEUPAttribute {
 				static pybind11::detail::override_caster_t<bool> caster;
 				return pybind11::detail::cast_ref<bool>(std::move(o), caster);
 			}
-			else return pybind11::detail::cast_safe<bool>(std::move(o));
+			return pybind11::detail::cast_safe<bool>(std::move(o));
 		}
 		return HEPEUPAttribute::init();
 	}
@@ -129,7 +129,7 @@ struct PyCallBack_HepMC3_HEPEUPAttribute : public HepMC3::HEPEUPAttribute {
 				static pybind11::detail::override_caster_t<bool> caster;
 				return pybind11::detail::cast_ref<bool>(std::move(o), caster);
 			}
-			else return pybind11::detail::cast_safe<bool>(std::move(o));
+			return pybind11::detail::cast_safe<bool>(std::move(o));
 		}
 		return HEPEUPAttribute::init(a0);
 	}
@@ -142,7 +142,7 @@ struct PyCallBack_HepMC3_HEPEUPAttribute : public HepMC3::HEPEUPAttribute {
 				static pybind11::detail::override_caster_t<bool> caster;
 				return pybind11::detail::cast_ref<bool>(std::move(o), caster);
 			}
-			else return pybind11::detail::cast_safe<bool>(std::move(o));
+			return pybind11::detail::cast_safe<bool>(std::move(o));
 		}
 		return HEPEUPAttribute::to_string(a0);
 	}
@@ -150,7 +150,7 @@ struct PyCallBack_HepMC3_HEPEUPAttribute : public HepMC3::HEPEUPAttribute {
 
 void bind_pyHepMC3_17(std::function< pybind11::module &(std::string const &namespace_) > &M)
 {
-	{ // HepMC3::HEPRUPAttribute file:HepMC3/LHEFAttributes.h line:26
+	{ // HepMC3::HEPRUPAttribute file:HepMC3/LHEFAttributes.h line:
 		pybind11::class_<HepMC3::HEPRUPAttribute, std::shared_ptr<HepMC3::HEPRUPAttribute>, PyCallBack_HepMC3_HEPRUPAttribute, HepMC3::Attribute> cl(M("HepMC3"), "HEPRUPAttribute", "Class for storing data for LHEF run information");
 		cl.def( pybind11::init( [](){ return new HepMC3::HEPRUPAttribute(); }, [](){ return new PyCallBack_HepMC3_HEPRUPAttribute(); } ) );
 		cl.def( pybind11::init<std::string>(), pybind11::arg("s") );
@@ -164,7 +164,7 @@ void bind_pyHepMC3_17(std::function< pybind11::module &(std::string const &names
 		cl.def("clear", (void (HepMC3::HEPRUPAttribute::*)()) &HepMC3::HEPRUPAttribute::clear, "Clear this object. \n\nC++: HepMC3::HEPRUPAttribute::clear() --> void");
 		cl.def("assign", (class HepMC3::HEPRUPAttribute & (HepMC3::HEPRUPAttribute::*)(const class HepMC3::HEPRUPAttribute &)) &HepMC3::HEPRUPAttribute::operator=, "C++: HepMC3::HEPRUPAttribute::operator=(const class HepMC3::HEPRUPAttribute &) --> class HepMC3::HEPRUPAttribute &", pybind11::return_value_policy::automatic, pybind11::arg(""));
 	}
-	{ // HepMC3::HEPEUPAttribute file:HepMC3/LHEFAttributes.h line:68
+	{ // HepMC3::HEPEUPAttribute file:HepMC3/LHEFAttributes.h line:
 		pybind11::class_<HepMC3::HEPEUPAttribute, std::shared_ptr<HepMC3::HEPEUPAttribute>, PyCallBack_HepMC3_HEPEUPAttribute, HepMC3::Attribute> cl(M("HepMC3"), "HEPEUPAttribute", "Class for storing data for LHEF run information");
 		cl.def( pybind11::init( [](){ return new HepMC3::HEPEUPAttribute(); }, [](){ return new PyCallBack_HepMC3_HEPEUPAttribute(); } ) );
 		cl.def( pybind11::init<std::string>(), pybind11::arg("s") );
