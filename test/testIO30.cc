@@ -220,5 +220,12 @@ int main() {
               << ev2_list.str() << std::endl;
     return 1;
   }
+
+  if (rdr->read_event(ev)) {
+    std::cout << "Expected an attempted read of the 3rd event in "
+                 "inputIO30.hepmc to fail due to missed whitespace."
+              << std::endl;
+    return 1;
+  }
   return 0;
 }
