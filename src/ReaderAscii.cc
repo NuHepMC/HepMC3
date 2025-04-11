@@ -118,7 +118,7 @@ bool ReaderAscii::read_event(GenEvent &evt) {
     while (!failed()) {
         m_isstream ? m_stream->getline(buf.data(), buf.size()) : m_file.getline(buf.data(), buf.size());
 
-        if ( std::strlen(buf.data()) == 0 ) continue;
+        if ( std::strlen(buf.data()) < 2 ) continue;
 
         // Check for ReaderAscii header/footer
         if ( std::strncmp(buf.data(), "HepMC", 5) == 0 ) {
@@ -133,6 +133,11 @@ bool ReaderAscii::read_event(GenEvent &evt) {
                 break;
             }
             continue;
+        }
+
+        if((buf[1]) != ' '){ // require that first char after line type is a space
+          is_parsing_successful = false;
+          break;
         }
 
         switch (buf[0]) {
