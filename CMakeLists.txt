@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.10.0 FATAL_ERROR)
 #----------------------------------------------------------------------------
 project(HepMC3 LANGUAGES CXX)
-set(PROJECT_VERSION 3.03.01)
-SET(HEPMC3_VERSION 3.03.01)
+set(PROJECT_VERSION 3.03.02)
+SET(HEPMC3_VERSION 3.03.02)
 SET(HEPMC3_VERSION_MAJOR  3)
 SET(HEPMC3_VERSION_MINOR  3)
-SET(HEPMC3_VERSION_PATCH  1)
+SET(HEPMC3_VERSION_PATCH  2)
 
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 #This module respects HFS, e.g. defines lib or lib64 when it is needed.
